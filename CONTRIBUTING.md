@@ -77,6 +77,8 @@ Nobody pushes to `main` directly, maintainers included: every change arrives thr
    - Every required check is green, with no high-severity code scanning alerts.
    - A code owner has approved the latest changes and every review conversation is resolved.
    - **Commits are signed** ([how to sign commits](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits)).
+     Maintainers can sign an existing branch without squashing it with
+     [`scripts/fix-repo.ps1`](scripts/fix-repo.ps1).
    - Pull requests are merged with a merge commit or squashed (no rebase merges); the branch is deleted
      after merging.
 

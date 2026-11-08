@@ -23,7 +23,7 @@ indent_size = 2
 [*.sln]
 indent_style = tab
 
-[*.{py,java,kt,kts}]
+[*.{py,java,kt,kts,ps1,psm1,psd1}]
 indent_size = 4
 
 [*.py]
@@ -36,7 +36,7 @@ indent_size = 4
 [*.{ts,tsx,js,jsx,mjs,cjs,json,jsonc,yml,yaml,html,css,scss}]
 indent_size = 2
 
-[*.{cmd,bat,ps1}]
+[*.{cmd,bat}]
 end_of_line = crlf
 
 [*.md]

@@ -51,7 +51,28 @@
 | Commits | [`pr-title.yml`](.github/workflows/pr-title.yml) | Conventional Commits enforced on PR titles |
 | Releases | [`release-please.yml`](.github/workflows/release-please.yml), [`release-please-config.json`](release-please-config.json), [`CHANGELOG.md`](CHANGELOG.md) | SemVer tags, GitHub Releases and changelog generated from commits |
 | Security | [`codeql.yml`](.github/workflows/codeql.yml), [`dependency-review.yml`](.github/workflows/dependency-review.yml), [`scorecard.yml`](.github/workflows/scorecard.yml), [`dependabot.yml`](.github/dependabot.yml) | Static analysis, vulnerable-dependency gate, OpenSSF Scorecard, weekly updates |
-| Settings | [`scripts/setup-repo.ps1`](scripts/setup-repo.ps1) | Repository settings and rulesets as code |
+| Settings | [`scripts/setup-repo.ps1`](scripts/setup-repo.ps1) | Repository settings, labels and rulesets as code |
+| Signed history | [`scripts/fix-repo.ps1`](scripts/fix-repo.ps1) | Re-signs a branch's commits so they are Verified, without squashing |
+
+## ✍️ Verified commits without squashing
+
+`main` only accepts signed commits. When a branch has unsigned commits (for example, because the local git
+identity belongs to another organization), re-create them through the GitHub API, which signs them, and
+keep the full history:
+
+```powershell
+# Preview, then run. Requires PowerShell 5.1+ and installs the GitHub CLI if it is missing.
+./scripts/fix-repo.ps1 -Owner <owner> -Repo <repo> -Branch <branch> -WhatIf
+./scripts/fix-repo.ps1 -Owner <owner> -Repo <repo> -Branch <branch>
+```
+
+The script replays every commit (same order, messages and files) with GitHub's `createCommitOnBranch`,
+checks that the final file tree is identical, and only then moves the branch. Open pull requests update
+automatically; merge them with a **merge commit** so each Verified commit reaches `main`:
+
+```bash
+gh pr merge <number> --merge --subject "<type>(<scope>): <description> (#<number>)" --delete-branch
+```
 
 ## 🛡️ Standards
 
