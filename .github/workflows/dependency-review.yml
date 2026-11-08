@@ -1,0 +1,40 @@
+name: Dependency review
+
+# Blocks pull requests that add dependencies with known vulnerabilities
+# (high severity or worse) or with licences incompatible with the project.
+# Needs the dependency graph: GitHub enables it on public repositories once Dependabot alerts are on
+# (scripts/setup-repo.ps1 does it). Until then, and on private repositories without GitHub Advanced
+# Security, the review is skipped with a warning instead of failing.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check that the dependency graph is enabled
+        id: graph
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          if gh api "repos/$REPO/dependency-graph/sbom" --silent 2>/dev/null; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Dependency graph is not enabled; run scripts/setup-repo.ps1 to enable Dependabot alerts."
+          fi
+      - if: steps.graph.outputs.enabled == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - if: steps.graph.outputs.enabled == 'true'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-2.0-only, GPL-3.0-only, AGPL-3.0-only, AGPL-3.0-or-later
+          comment-summary-in-pr: on-failure
