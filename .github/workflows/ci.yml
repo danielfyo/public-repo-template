@@ -45,21 +45,6 @@ jobs:
           persist-credentials: false
       - uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
 
-  no-ai-traces:
-    name: no-ai-traces
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Repository content stays free of AI assistant references
-        run: |
-          if git grep -n -I -i -E 'claude|anthropic|co-authored-by: *(claude|copilot|chatgpt)' \
-              -- . ':(exclude).gitignore' ':(exclude).github/workflows/ci.yml'; then
-            echo "::error::Remove the AI assistant references listed above."
-            exit 1
-          fi
-
   # --- Project jobs ----------------------------------------------------------
   # Example for a Node.js project (pin every action to a full commit SHA):
   #

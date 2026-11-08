@@ -205,7 +205,3 @@ cdk.out/
 # --- Containers --------------------------------------------------------------
 docker-compose.override.yml
 .docker/
-
-# --- AI assistants: keep local, personal settings out of the repository -----
-.claude/settings.local.json
-CLAUDE.local.md
