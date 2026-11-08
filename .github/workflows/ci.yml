@@ -25,6 +25,8 @@ jobs:
         with:
           persist-credentials: false
       - uses: DavidAnson/markdownlint-cli2-action@696eb3f2509270d7b882d2aa68347bc676e7af34 # v25.0.0
+      - name: Relative links point to existing files
+        run: python3 tools/check_links.py
 
   editorconfig:
     name: editorconfig
@@ -44,6 +46,30 @@ jobs:
         with:
           persist-credentials: false
       - uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
+
+  powershell:
+    name: powershell
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Parse and lint PowerShell scripts
+        shell: pwsh
+        run: |
+          $files = @(Get-ChildItem -Recurse -Include *.ps1, *.psm1 -File | Where-Object { $_.FullName -notmatch '[\\/]node_modules[\\/]' })
+          if ($files.Count -eq 0) { Write-Host 'No PowerShell files.'; exit 0 }
+          $failed = $false
+          foreach ($file in $files) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$null, [ref]$errors) | Out-Null
+            foreach ($e in $errors) { Write-Host "::error file=$($file.FullName),line=$($e.Extent.StartLineNumber)::$($e.Message)"; $failed = $true }
+          }
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -RequiredVersion 1.24.0 -Scope CurrentUser -Force
+          $issues = @(Invoke-ScriptAnalyzer -Path . -Recurse -Severity Warning, Error -ExcludeRule PSAvoidUsingWriteHost)
+          foreach ($i in $issues) { Write-Host "::error file=$($i.ScriptPath),line=$($i.Line)::$($i.RuleName): $($i.Message)" }
+          if ($failed -or $issues.Count -gt 0) { exit 1 }
 
   # --- Project jobs ----------------------------------------------------------
   # Example for a Node.js project (pin every action to a full commit SHA):

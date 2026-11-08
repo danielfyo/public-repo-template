@@ -31,14 +31,12 @@
         touching your branch if the resulting tree differs from the original.
       - Merge commits cannot be replayed (the branch must have linear history).
 
-.PARAMETER Owner
-    Repository owner (user or organization).
-
 .PARAMETER Repo
-    Repository name.
+    Repository as owner/name. Asked interactively when omitted.
 
 .PARAMETER Branch
     Branch whose commits must become verified (for example, the pull request branch).
+    Asked interactively when omitted.
 
 .PARAMETER Base
     Branch the history starts from (usually the pull request target).
@@ -53,30 +51,51 @@
 .PARAMETER KeepWorkBranch
     Do not delete the temporary branch at the end.
 
+.PARAMETER Restart
+    Delete a work branch left behind by an interrupted run and start again.
+
 .NOTES
     Works on Windows PowerShell 5.1 and PowerShell 7+ (Windows, macOS, Linux).
 
+    After the branch is re-signed, do not 'git pull' or 'git push' your local copy of it (a pull
+    creates an unsigned merge commit). Update it with:
+        git fetch origin <branch>
+        git reset --hard origin/<branch>
+    Merge the pull request with a merge commit (never "Rebase and merge", which re-creates the
+    commits unsigned).
+
 .EXAMPLE
-    ./scripts/fix-repo.ps1 -Owner <owner> -Repo <repo> -Branch feat/my-change
+    ./scripts/fix-repo.ps1 -Repo <owner>/<name> -Branch feat/my-change
 
 .EXAMPLE
     # Preview only: show what would change, touch nothing.
-    ./scripts/fix-repo.ps1 -Owner <owner> -Repo <repo> -Branch feat/my-change -WhatIf
+    ./scripts/fix-repo.ps1 -Repo <owner>/<name> -Branch feat/my-change -WhatIf
 
 .EXAMPLE
     # Build the signed history on a separate branch and leave the original untouched.
-    ./scripts/fix-repo.ps1 -Owner <owner> -Repo <repo> -Branch feat/my-change -NoReplace -KeepWorkBranch
+    ./scripts/fix-repo.ps1 -Repo <owner>/<name> -Branch feat/my-change -NoReplace -KeepWorkBranch
 #>
 [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
 param(
-    [Parameter(Mandatory)][string] $Owner,
-    [Parameter(Mandatory)][string] $Repo,
-    [Parameter(Mandatory)][string] $Branch,
+    [string] $Repo,
+    [string] $Branch,
     [string] $Base = 'main',
-    [string] $WorkBranch = "$Branch-signed",
+    [string] $WorkBranch,
     [switch] $NoReplace,
-    [switch] $KeepWorkBranch
+    [switch] $KeepWorkBranch,
+    [switch] $Restart
 )
+
+# Lets this PowerShell process run scripts without prompts (Windows only; system settings are untouched).
+if ($env:OS -eq 'Windows_NT') { Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force }
+
+while ($Repo -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') {
+    if ($Repo) { Write-Host "  '$Repo' is not in owner/name format." -ForegroundColor Yellow }
+    $Repo = (Read-Host 'Repository (owner/name)').Trim()
+}
+while (-not $Branch) { $Branch = (Read-Host 'Branch whose commits must be signed').Trim() }
+if (-not $WorkBranch) { $WorkBranch = "$Branch-signed" }
+$Owner, $Repo = $Repo -split '/', 2
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -334,7 +353,12 @@ if (-not $PSCmdlet.ShouldProcess("$Owner/$Repo", "Create signed copies of $($com
 # --------------------------------------------------------------------------- 1. work branch
 
 if (Test-BranchExists $WorkBranch) {
-    throw "Work branch '$WorkBranch' already exists. Delete it or pass -WorkBranch with another name."
+    if (-not $Restart) {
+        throw "Work branch '$WorkBranch' already exists (probably from an interrupted run). " +
+              "Run again with -Restart to delete it and start over, or pass -WorkBranch with another name."
+    }
+    Invoke-Gh @('api', '-X', 'DELETE', "$RepoPath/git/refs/heads/$WorkBranch") | Out-Null
+    Write-Host "Deleted the work branch '$WorkBranch' left by a previous run (-Restart)." -ForegroundColor Yellow
 }
 Invoke-Gh @('api', '-X', 'POST', "$RepoPath/git/refs", '-f', "ref=refs/heads/$WorkBranch", '-f', "sha=$mergeBase") | Out-Null
 Write-Host "`nCreated work branch '$WorkBranch' at $($mergeBase.Substring(0, 7))." -ForegroundColor Cyan

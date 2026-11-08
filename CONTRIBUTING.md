@@ -27,9 +27,10 @@ Repository-wide checks run in CI on every pull request:
 
 | Check | What it verifies |
 | --- | --- |
-| `markdown` | Markdown style ([`.markdownlint.jsonc`](.markdownlint.jsonc)) |
+| `markdown` | Markdown style ([`.markdownlint.jsonc`](.markdownlint.jsonc)) and relative links ([`tools/check_links.py`](tools/check_links.py)) |
 | `editorconfig` | Encoding, line endings, indentation and trailing whitespace ([`.editorconfig`](.editorconfig)) |
 | `actionlint` | GitHub Actions workflow syntax and shell scripts |
+| `powershell` | PowerShell syntax and PSScriptAnalyzer rules |
 | `conventional-commits` | Pull request title format |
 | CodeQL, dependency review | Security analysis and vulnerable dependencies |
 
@@ -62,7 +63,10 @@ Write a body that explains **what** changed and **why**, wrapped at 72 character
 ## Branches
 
 Branch from `main` using the commit type as prefix: `feat/<topic>`, `fix/<topic>`, `docs/<topic>`,
-`chore/<topic>`, `ci/<topic>`.
+`chore/<topic>`, `ci/<topic>`. Branch names describe the change, never the tool used to make it.
+
+Use your own identity in every commit; if your global git identity belongs to another organization, set it
+for this repository only: `git config user.name "<name>"` and `git config user.email "<email>"`.
 
 ## Pull request process
 

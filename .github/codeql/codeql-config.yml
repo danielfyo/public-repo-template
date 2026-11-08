@@ -1,0 +1,8 @@
+# CodeQL configuration shared by every language in codeql.yml.
+# Exclude generated, vendored and intentionally insecure sample code here so that real findings stay visible.
+name: CodeQL config
+paths-ignore:
+  - "**/node_modules/**"
+  - "**/vendor/**"
+  - "**/dist/**"
+  - "**/build/**"
