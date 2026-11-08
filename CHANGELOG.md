@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.0.0 (2026-11-08)
+
+
+### Features
+
+* **scripts:** add repository setup and commit signing scripts ([7cb5dbd](https://github.com/danielfyo/public-repo-template/commit/7cb5dbdf81a0c199ff9a2d21934a0d2ba7756848))
+* **scripts:** prompt for missing inputs and harden repository setup ([1a5aced](https://github.com/danielfyo/public-repo-template/commit/1a5aced89b6e001e6fb82e48ace03cf99374495b))
+
+
+### Bug Fixes
+
+* **scripts:** satisfy PSScriptAnalyzer and skip dependency review without a graph ([38e1386](https://github.com/danielfyo/public-repo-template/commit/38e138675275c387fd5d14cf80e017bf6a3537ff))
+
+
+### Documentation
+
+* add pull request templates for each type of change ([0280406](https://github.com/danielfyo/public-repo-template/commit/028040691d88530e670e8726caca694de6fffbce))
+* add template README and contribution guide ([1737a3c](https://github.com/danielfyo/public-repo-template/commit/1737a3ccee1613dd1139fc723a989441daefa71d))
+
+
+### Continuous Integration
+
+* fix editorconfig and dependency review checks ([31a70e2](https://github.com/danielfyo/public-repo-template/commit/31a70e26bfe46af72990b24ea0ec863958041b94))
+
+## Changelog
+
 All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
