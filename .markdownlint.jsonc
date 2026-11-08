@@ -1,0 +1,13 @@
+// markdownlint rules for every Markdown file in the repository.
+// https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+{
+  "default": true,
+  // Line length: prose is wrapped by hand around 110 characters; tables and code are exempt.
+  "MD013": { "line_length": 120, "tables": false, "code_blocks": false, "headings": false },
+  // Inline HTML is allowed for <details>, <p align>, <img> and anchors.
+  "MD033": { "allowed_elements": ["a", "br", "details", "summary", "p", "img", "picture", "source", "sup", "sub", "kbd"] },
+  // The first line may be an HTML anchor or banner instead of a heading.
+  "MD041": false,
+  // Repeated headings are fine in different sections (e.g. "Usage").
+  "MD024": { "siblings_only": true }
+}

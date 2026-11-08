@@ -1,0 +1,6 @@
+# Code owners are requested automatically as reviewers, and the "Protect main"
+# ruleset requires their approval. Add path-specific owners below the default.
+# Syntax: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for every change.
+* @danielfyo
