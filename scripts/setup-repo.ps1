@@ -98,7 +98,7 @@ function Invoke-Gh {
     $ErrorActionPreference = 'Continue'
     $WhatIfPreference = $false
     $previousEncoding = [Console]::OutputEncoding
-    try { [Console]::OutputEncoding = $Utf8NoBom } catch { }
+    try { [Console]::OutputEncoding = $Utf8NoBom } catch { Write-Verbose 'Console encoding cannot be changed in this host.' }
     $errorFile = [System.IO.Path]::GetTempFileName()
     try {
         $output = & gh @Arguments 2> $errorFile
@@ -113,7 +113,7 @@ function Invoke-Gh {
     }
     finally {
         [System.IO.File]::Delete($errorFile)
-        try { [Console]::OutputEncoding = $previousEncoding } catch { }
+        try { [Console]::OutputEncoding = $previousEncoding } catch { Write-Verbose 'Console encoding cannot be changed in this host.' }
     }
 }
 
@@ -140,6 +140,7 @@ function Write-Step([string] $Text) { Write-Host "`n== $Text" -ForegroundColor C
 
 function Sync-Ruleset {
     <# Creates or updates a ruleset by name so the script can be re-run safely. #>
+    [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory)] $Ruleset, [Parameter(Mandatory)][string] $Summary)
     $all = @((Invoke-Gh @('api', "$RepoPath/rulesets")) -join "`n" | ConvertFrom-Json)
     $existing = @($all | Where-Object { $_ -and $_.name -eq $Ruleset.name })

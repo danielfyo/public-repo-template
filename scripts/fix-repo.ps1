@@ -128,7 +128,7 @@ function Invoke-Gh {
     $WhatIfPreference = $false
     # gh writes UTF-8; Windows PowerShell would otherwise decode it with the console code page.
     $previousEncoding = [Console]::OutputEncoding
-    try { [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false) } catch { }   # not settable in some hosts (ISE)
+    try { [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false) } catch { Write-Verbose 'Console encoding cannot be changed in this host.' }   # not settable in some hosts (ISE)
     # .NET APIs instead of New-TemporaryFile/Remove-Item so that -WhatIf does not silence them.
     $errorFile = [System.IO.Path]::GetTempFileName()
     try {
@@ -141,11 +141,11 @@ function Invoke-Gh {
     }
     finally {
         [System.IO.File]::Delete($errorFile)
-        try { [Console]::OutputEncoding = $previousEncoding } catch { }
+        try { [Console]::OutputEncoding = $previousEncoding } catch { Write-Verbose 'Console encoding cannot be changed in this host.' }
     }
 }
 
-function Test-GhSucceeds {
+function Test-GhCommand {
     <# Runs gh silently and returns $true if it exited with code 0. #>
     param([Parameter(Mandatory)][string[]] $Arguments)
     $ErrorActionPreference = 'Continue'
@@ -166,9 +166,9 @@ function Get-BranchSha {
     return (Invoke-GhJson @("$RepoPath/git/ref/heads/$Name")).object.sha
 }
 
-function Test-BranchExists {
+function Test-Branch {
     param([Parameter(Mandatory)][string] $Name)
-    return Test-GhSucceeds @('api', "$RepoPath/git/ref/heads/$Name", '--silent')
+    return Test-GhCommand @('api', "$RepoPath/git/ref/heads/$Name", '--silent')
 }
 
 function Get-TreeSha {
@@ -176,7 +176,7 @@ function Get-TreeSha {
     return (Invoke-GhJson @("$RepoPath/git/commits/$CommitSha")).tree.sha
 }
 
-function Get-CommitFiles {
+function Get-CommitFile {
     <# All changed files of a commit (the files list is paginated by GitHub). #>
     param([Parameter(Mandatory)][string] $Sha)
     $lines = Invoke-Gh @('api', "$RepoPath/commits/${Sha}?per_page=100", '--paginate', '--jq', '.files[] | tojson')
@@ -198,7 +198,7 @@ mutation ($input: CreateCommitOnBranchInput!) {
 }
 '@
 
-function New-SignedCommit {
+function Add-SignedCommit {
     <# Creates one commit on the work branch through GraphQL. Returns the new commit SHA. #>
     param(
         [Parameter(Mandatory)][string] $ExpectedHeadOid,
@@ -245,7 +245,7 @@ function New-SignedCommit {
 
 # --------------------------------------------------------------------------- 0. GitHub CLI setup
 
-function Update-SessionPath {
+function Sync-SessionPath {
     <# Makes a freshly installed gh visible in the current session (no new terminal needed). #>
     $separator = [System.IO.Path]::PathSeparator
     if ($OnWindows) {
@@ -265,6 +265,8 @@ function Update-SessionPath {
 }
 
 function Install-GitHubCli {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     $installers = @(
         @{ Name = 'winget'; Arguments = @('install', '--id', 'GitHub.cli', '--exact', '--source', 'winget', '--accept-package-agreements', '--accept-source-agreements') }
         @{ Name = 'scoop'; Arguments = @('install', 'gh') }
@@ -291,7 +293,7 @@ function Install-GitHubCli {
         throw "'$($installer.Name) $($installerArguments -join ' ')' failed (exit $LASTEXITCODE).$hint"
     }
 
-    Update-SessionPath
+    Sync-SessionPath
     if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
         throw "GitHub CLI was installed but 'gh' is not on PATH yet. Open a new terminal and run the script again."
     }
@@ -304,7 +306,7 @@ if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
 }
 Write-Host "  $((& gh --version | Select-Object -First 1))"
 
-if (-not (Test-GhSucceeds @('auth', 'status', '--hostname', 'github.com'))) {
+if (-not (Test-GhCommand @('auth', 'status', '--hostname', 'github.com'))) {
     if (-not $PSCmdlet.ShouldProcess('github.com', 'Log in with gh auth login')) {
         throw "gh is not logged in to github.com. Run 'gh auth login' first."
     }
@@ -317,8 +319,8 @@ if (-not (Test-GhSucceeds @('auth', 'status', '--hostname', 'github.com'))) {
 $login = (Invoke-GhJson @('user')).login
 Write-Host "  Commits will be authored and signed for GitHub user: $login"
 
-if (-not (Test-BranchExists $Branch)) { throw "Branch '$Branch' does not exist in $Owner/$Repo." }
-if (-not (Test-BranchExists $Base)) { throw "Base branch '$Base' does not exist in $Owner/$Repo." }
+if (-not (Test-Branch $Branch)) { throw "Branch '$Branch' does not exist in $Owner/$Repo." }
+if (-not (Test-Branch $Base)) { throw "Base branch '$Base' does not exist in $Owner/$Repo." }
 
 $branchSha = Get-BranchSha $Branch
 $baseSha = Get-BranchSha $Base
@@ -352,7 +354,7 @@ if (-not $PSCmdlet.ShouldProcess("$Owner/$Repo", "Create signed copies of $($com
 
 # --------------------------------------------------------------------------- 1. work branch
 
-if (Test-BranchExists $WorkBranch) {
+if (Test-Branch $WorkBranch) {
     if (-not $Restart) {
         throw "Work branch '$WorkBranch' already exists (probably from an interrupted run). " +
               "Run again with -Restart to delete it and start over, or pass -WorkBranch with another name."
@@ -372,7 +374,7 @@ foreach ($c in $commits) {
     $additions = [System.Collections.Generic.List[object]]::new()
     $deletions = [System.Collections.Generic.List[object]]::new()
 
-    foreach ($f in Get-CommitFiles $c.sha) {
+    foreach ($f in Get-CommitFile $c.sha) {
         switch ($f.status) {
             'removed' { $deletions.Add(@{ path = $f.filename }) }
             'renamed' {
@@ -392,7 +394,7 @@ foreach ($c in $commits) {
         continue
     }
 
-    $newSha = New-SignedCommit -ExpectedHeadOid $head -Message $c.commit.message `
+    $newSha = Add-SignedCommit -ExpectedHeadOid $head -Message $c.commit.message `
         -Additions $additions.ToArray() -Deletions $deletions.ToArray()
 
     $mapping.Add([pscustomobject]@{ Old = $c.sha.Substring(0, 7); New = $newSha.Substring(0, 7); Message = ($c.commit.message -split "`n")[0] })
