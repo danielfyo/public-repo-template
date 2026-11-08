@@ -45,7 +45,7 @@
 | --- | --- | --- |
 | Licence | [`LICENSE`](LICENSE) | MIT |
 | Community health | [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md), [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SECURITY.md`](SECURITY.md), [`SUPPORT.md`](SUPPORT.md) | Contributor Covenant 2.1, contribution rules, private vulnerability reporting |
-| Issues and PRs | [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE), [`pull_request_template.md`](.github/pull_request_template.md), [`CODEOWNERS`](.github/CODEOWNERS) | Issue forms (bug, feature), PR checklist, automatic reviewers |
+| Issues and PRs | [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE), [`pull_request_template.md`](.github/pull_request_template.md), [`.github/PULL_REQUEST_TEMPLATE/`](.github/PULL_REQUEST_TEMPLATE), [`CODEOWNERS`](.github/CODEOWNERS) | Issue forms (bug, feature), a default PR template plus feature, bug fix, documentation, maintenance and security templates, automatic reviewers |
 | Consistency | [`.editorconfig`](.editorconfig), [`.gitattributes`](.gitattributes), [`.gitignore`](.gitignore), [`.markdownlint.jsonc`](.markdownlint.jsonc) | UTF-8 + LF everywhere, per-language indentation, ignores for every common stack and for secrets |
 | CI | [`ci.yml`](.github/workflows/ci.yml) | Markdown, EditorConfig and workflow linting; slot for project jobs |
 | Commits | [`pr-title.yml`](.github/workflows/pr-title.yml) | Conventional Commits enforced on PR titles |

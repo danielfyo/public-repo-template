@@ -1,3 +1,9 @@
+<!--
+  Specific templates: add "?template=<name>.md" to the "compare" URL, or "--template <name>.md" to
+  "gh pr create": feature.md, bugfix.md, documentation.md, maintenance.md, security.md
+  (in .github/PULL_REQUEST_TEMPLATE/).
+-->
+
 ## Summary
 
 <!-- What does this pull request change and why? Link related issues: "Closes #123". -->

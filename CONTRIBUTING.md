@@ -70,7 +70,9 @@ Nobody pushes to `main` directly, maintainers included: every change arrives thr
 
 1. **Fork** the repository (or create a branch if you are a maintainer) from `main`.
 2. Make your change with tests and run the checks above.
-3. Open a pull request using the template. Its title must be a Conventional Commit.
+3. Open a pull request using the template. Its title must be a Conventional Commit. Pick a specific
+   template when it fits: `feature.md`, `bugfix.md`, `documentation.md`, `maintenance.md` or `security.md`
+   (`gh pr create --template feature.md`, or add `?template=feature.md` to the compare URL).
 4. **Workflow approval.** For security, GitHub Actions do not run on pull requests from outside
    contributors until a maintainer approves them. Expect a short wait before CI starts.
 5. **Merge requirements** on `main`:
