@@ -1,0 +1,6 @@
+{
+  "Exclude": ["CHANGELOG.md", "\\.png$", "\\.ico$"],
+  "Disable": {
+    "IndentSize": true
+  }
+}

@@ -2,6 +2,9 @@ name: Dependency review
 
 # Blocks pull requests that add dependencies with known vulnerabilities
 # (high severity or worse) or with licences incompatible with the project.
+# Needs the dependency graph, which GitHub enables on every public repository.
+# Private repositories without GitHub Advanced Security skip the job (a skipped
+# required check does not block merging); it starts working once the repository is public.
 on:
   pull_request:
     branches: [main]
@@ -11,6 +14,7 @@ permissions:
 
 jobs:
   dependency-review:
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
